@@ -46,6 +46,8 @@ int main(){
     return 0;
 }
 
+//Link: https://atcoder.jp/contests/abs/tasks/abc087_b
+
 /*
 g++ Coins.cpp -o main.exe
 @"
