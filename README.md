@@ -1,4 +1,4 @@
-# At_Coder Beginner Selection Solution #
+# Competitive Programming Solution #
 This repository is created to save my solutions for programming problems on At Coder.
 ## Overview
 * Objective: to practice Competitive Programming
