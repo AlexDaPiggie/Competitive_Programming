@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   advanceMotion,
   createMotionState,
+  nextEnabledState,
   renderedLine,
   resetMotion,
   setTargetLine,
@@ -96,4 +97,11 @@ test('normalizes non-finite line values before clamping', () => {
   assert.equal(infiniteCursor.currentLine, 0);
   assert.equal(renderedLine(createMotionState(Number.NaN), 5), 0);
   assert.equal(invalidLineCount.currentLine, 0);
+});
+
+test('updates enabled state for command actions', () => {
+  assert.equal(nextEnabledState(false, 'enable'), true);
+  assert.equal(nextEnabledState(true, 'disable'), false);
+  assert.equal(nextEnabledState(true, 'toggle'), false);
+  assert.equal(nextEnabledState(false, 'toggle'), true);
 });

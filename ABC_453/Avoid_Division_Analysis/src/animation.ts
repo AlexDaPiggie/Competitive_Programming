@@ -7,6 +7,8 @@ export type SpriteKind =
   | 'run-down-1'
   | 'run-down-2';
 
+export type EnablementAction = 'enable' | 'disable' | 'toggle';
+
 export interface CatMotionState {
   readonly currentLine: number;
   readonly targetLine: number;
@@ -118,6 +120,18 @@ export function clampLine(line: number, lineCount: number): number {
   const normalizedLine = Number.isFinite(line) ? line : 0;
 
   return Math.min(Math.max(normalizedLine, 0), lineCount - 1);
+}
+
+export function nextEnabledState(current: boolean, action: EnablementAction): boolean {
+  if (action === 'enable') {
+    return true;
+  }
+
+  if (action === 'disable') {
+    return false;
+  }
+
+  return !current;
 }
 
 function advanceFrame(
