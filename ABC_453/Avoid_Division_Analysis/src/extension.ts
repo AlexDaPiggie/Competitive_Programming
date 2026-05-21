@@ -42,7 +42,7 @@ class OnekoCatController implements vscode.Disposable {
   private config: OnekoConfig;
 
   public constructor(private readonly context: vscode.ExtensionContext) {
-    this.config = readConfig();
+    this.config = readConfig(vscode.window.activeTextEditor?.document.uri);
     this.recreateDecorations();
     this.registerCommands();
     this.registerEditorEvents();
@@ -62,16 +62,20 @@ class OnekoCatController implements vscode.Disposable {
   private registerCommands(): void {
     this.disposables.push(
       vscode.commands.registerCommand('onekoCat.enable', async () => {
-        await vscode.workspace.getConfiguration('onekoCat').update('enabled', true, vscode.ConfigurationTarget.Global);
+        const resource = this.activeEditor?.document.uri;
+        await vscode.workspace.getConfiguration('onekoCat', resource).update('enabled', true, this.enabledConfigurationTarget());
         this.applyConfigChange();
       }),
       vscode.commands.registerCommand('onekoCat.disable', async () => {
-        await vscode.workspace.getConfiguration('onekoCat').update('enabled', false, vscode.ConfigurationTarget.Global);
+        const resource = this.activeEditor?.document.uri;
+        await vscode.workspace.getConfiguration('onekoCat', resource).update('enabled', false, this.enabledConfigurationTarget());
         this.applyConfigChange();
       }),
       vscode.commands.registerCommand('onekoCat.toggle', async () => {
-        const enabled = vscode.workspace.getConfiguration('onekoCat').get<boolean>('enabled', true);
-        await vscode.workspace.getConfiguration('onekoCat').update('enabled', !enabled, vscode.ConfigurationTarget.Global);
+        const resource = this.activeEditor?.document.uri;
+        const config = vscode.workspace.getConfiguration('onekoCat', resource);
+        const enabled = config.get<boolean>('enabled', true);
+        await config.update('enabled', !enabled, this.enabledConfigurationTarget());
         this.applyConfigChange();
       })
     );
@@ -124,7 +128,7 @@ class OnekoCatController implements vscode.Disposable {
 
   private applyConfigChange(): void {
     const previousScale = this.config.catScale;
-    this.config = readConfig();
+    this.config = readConfig(this.activeEditor?.document.uri);
 
     if (this.config.catScale !== previousScale) {
       this.recreateDecorations();
@@ -136,6 +140,21 @@ class OnekoCatController implements vscode.Disposable {
     }
 
     this.activateEditor(vscode.window.activeTextEditor, true);
+  }
+
+  private enabledConfigurationTarget(): vscode.ConfigurationTarget {
+    const resource = this.activeEditor?.document.uri;
+    const inspection = vscode.workspace.getConfiguration('onekoCat', resource).inspect<boolean>('enabled');
+
+    if (resource && inspection?.workspaceFolderValue !== undefined) {
+      return vscode.ConfigurationTarget.WorkspaceFolder;
+    }
+
+    if (inspection?.workspaceValue !== undefined) {
+      return vscode.ConfigurationTarget.Workspace;
+    }
+
+    return vscode.ConfigurationTarget.Global;
   }
 
   private recreateDecorations(): void {
@@ -226,8 +245,8 @@ class OnekoCatController implements vscode.Disposable {
   }
 }
 
-function readConfig(): OnekoConfig {
-  const config = vscode.workspace.getConfiguration('onekoCat');
+function readConfig(resource?: vscode.Uri): OnekoConfig {
+  const config = vscode.workspace.getConfiguration('onekoCat', resource);
 
   return {
     enabled: config.get<boolean>('enabled', true),
