@@ -53,7 +53,13 @@ export function advanceMotion(
   const targetLine = clampLine(state.targetLine, lineCount);
   const remaining = targetLine - currentLine;
 
-  if (Math.abs(remaining) <= epsilon || elapsedMs <= 0 || speedLinesPerSecond <= 0) {
+  if (
+    Math.abs(remaining) <= epsilon ||
+    !Number.isFinite(elapsedMs) ||
+    elapsedMs <= 0 ||
+    !Number.isFinite(speedLinesPerSecond) ||
+    speedLinesPerSecond <= 0
+  ) {
     return {
       currentLine,
       targetLine,
@@ -105,27 +111,36 @@ export function spriteForState(state: CatMotionState): SpriteKind {
 }
 
 export function clampLine(line: number, lineCount: number): number {
-  if (lineCount <= 0) {
+  if (!Number.isFinite(lineCount) || lineCount <= 0) {
     return 0;
   }
 
-  return Math.min(Math.max(line, 0), lineCount - 1);
+  const normalizedLine = Number.isFinite(line) ? line : 0;
+
+  return Math.min(Math.max(normalizedLine, 0), lineCount - 1);
 }
 
 function advanceFrame(
   frameIndex: 0 | 1,
   frameElapsedMs: number
 ): { frameIndex: 0 | 1; frameElapsedMs: number } {
-  let nextFrameIndex = frameIndex;
-  let nextFrameElapsedMs = frameElapsedMs;
-
-  while (nextFrameElapsedMs >= frameDurationMs) {
-    nextFrameIndex = nextFrameIndex === 0 ? 1 : 0;
-    nextFrameElapsedMs -= frameDurationMs;
+  if (!Number.isFinite(frameElapsedMs) || frameElapsedMs < 0) {
+    return {
+      frameIndex,
+      frameElapsedMs: 0
+    };
   }
+
+  const advancedFrames = Math.floor(frameElapsedMs / frameDurationMs);
+  const nextFrameIndex = advancedFrames % 2 === 0 ? frameIndex : toggleFrame(frameIndex);
+  const nextFrameElapsedMs = frameElapsedMs % frameDurationMs;
 
   return {
     frameIndex: nextFrameIndex,
     frameElapsedMs: nextFrameElapsedMs
   };
+}
+
+function toggleFrame(frameIndex: 0 | 1): 0 | 1 {
+  return frameIndex === 0 ? 1 : 0;
 }

@@ -65,3 +65,35 @@ test('selects vertical running sprites based on direction and frame index', () =
   assert.equal(spriteForState(down), 'run-down-2');
   assert.equal(spriteForState(up), 'run-up-2');
 });
+
+test('handles very large elapsed deltas without repeated frame subtraction', () => {
+  const initial = setTargetLine(createMotionState(0), 3_000_000_000, 4_000_000_000);
+  const moved = advanceMotion(initial, 2_000_000_000, 1, 4_000_000_000);
+
+  assert.equal(moved.currentLine, 2_000_000);
+  assert.equal(moved.direction, 'down');
+  assert.equal(moved.frameIndex, 1);
+  assert.equal(moved.frameElapsedMs, 20);
+});
+
+test('ignores non-finite elapsed input', () => {
+  const initial = setTargetLine(createMotionState(0), 8, 20);
+  const moved = advanceMotion(initial, Number.POSITIVE_INFINITY, 8, 20);
+
+  assert.equal(moved.currentLine, 0);
+  assert.equal(moved.targetLine, 8);
+  assert.equal(moved.direction, 'idle');
+  assert.equal(moved.frameIndex, 0);
+  assert.equal(moved.frameElapsedMs, 0);
+});
+
+test('normalizes non-finite line values before clamping', () => {
+  const nanTarget = setTargetLine(createMotionState(0), Number.NaN, 5);
+  const infiniteCursor = resetMotion(Number.POSITIVE_INFINITY, 5);
+  const invalidLineCount = resetMotion(3, Number.POSITIVE_INFINITY);
+
+  assert.equal(nanTarget.targetLine, 0);
+  assert.equal(infiniteCursor.currentLine, 0);
+  assert.equal(renderedLine(createMotionState(Number.NaN), 5), 0);
+  assert.equal(invalidLineCount.currentLine, 0);
+});
