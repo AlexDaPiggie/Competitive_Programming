@@ -112,6 +112,12 @@ class OnekoCatController implements vscode.Disposable {
   private activateEditor(editor: vscode.TextEditor | undefined, resetToCursor: boolean): void {
     this.clearAllDecorations();
     this.activeEditor = isRenderableEditor(editor) ? editor : undefined;
+    const previousScale = this.config.catScale;
+    this.config = readConfig(this.activeEditor?.document.uri);
+
+    if (this.config.catScale !== previousScale) {
+      this.recreateDecorations();
+    }
 
     if (!this.config.enabled || !this.activeEditor) {
       this.hide();
