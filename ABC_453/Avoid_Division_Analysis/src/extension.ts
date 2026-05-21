@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import {
   CatMotionState,
+  EnablementAction,
   SpriteKind,
   advanceMotion,
   createMotionState,
+  nextEnabledState,
   renderedLine,
   resetMotion,
   setTargetLine,
@@ -61,24 +63,20 @@ class OnekoCatController implements vscode.Disposable {
 
   private registerCommands(): void {
     this.disposables.push(
-      vscode.commands.registerCommand('onekoCat.enable', async () => {
-        const resource = this.activeEditor?.document.uri;
-        await vscode.workspace.getConfiguration('onekoCat', resource).update('enabled', true, this.enabledConfigurationTarget());
-        this.applyConfigChange();
-      }),
-      vscode.commands.registerCommand('onekoCat.disable', async () => {
-        const resource = this.activeEditor?.document.uri;
-        await vscode.workspace.getConfiguration('onekoCat', resource).update('enabled', false, this.enabledConfigurationTarget());
-        this.applyConfigChange();
-      }),
-      vscode.commands.registerCommand('onekoCat.toggle', async () => {
-        const resource = this.activeEditor?.document.uri;
-        const config = vscode.workspace.getConfiguration('onekoCat', resource);
-        const enabled = config.get<boolean>('enabled', true);
-        await config.update('enabled', !enabled, this.enabledConfigurationTarget());
-        this.applyConfigChange();
-      })
+      vscode.commands.registerCommand('onekoCat.enable', () => this.updateEnabledFromCommand('enable')),
+      vscode.commands.registerCommand('onekoCat.disable', () => this.updateEnabledFromCommand('disable')),
+      vscode.commands.registerCommand('onekoCat.toggle', () => this.updateEnabledFromCommand('toggle'))
     );
+  }
+
+  private async updateEnabledFromCommand(action: EnablementAction): Promise<void> {
+    const resource = this.activeEditor?.document.uri;
+    const config = vscode.workspace.getConfiguration('onekoCat', resource);
+    const enabled = config.get<boolean>('enabled', true);
+    const nextEnabled = nextEnabledState(enabled, action);
+
+    await config.update('enabled', nextEnabled, this.enabledConfigurationTarget());
+    this.applyConfigChange();
   }
 
   private registerEditorEvents(): void {
