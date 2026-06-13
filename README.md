@@ -1,11 +1,7 @@
 # Competitive Programming Solution #
-This repository is created to save my solutions for programming problems on At Coder.
-## Overview
-* Objective: to practice Competitive Programming
-* Programming Language: C++
+This repo saves the solution to DSA problems
 
 ## Problems Link:
-* [Beginner Selection Link](https://atcoder.jp/contests/abs/tasks)
-
-## My Solution on Youtube
-* Beginner Selection: 
+* [ABS]  problems are from [AtCoder Beginner Selection](https://atcoder.jp/contests/abs/tasks)
+* [ABC_453] problems are from [AtCoder Beginner Contest 453](https://atcoder.jp/contests/abc453)
+* [nc] problems are from [neetcode](https://neetcode.io/roadmap)
